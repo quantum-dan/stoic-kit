@@ -9,4 +9,13 @@ libraryDependencies ++= Seq(
 	"com.typesafe.akka" %% "akka-actor" % "2.5.4"
 )
 
-mainClass := Some("stoickit.StoicKit")
+mainClass in Compile := Some("stoickit.StoicKit")
+
+exportJars := true
+
+artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+    artifact.name + "-" + module.revision + "." + artifact.extension
+}
+
+assemblyJarName in assembly := "stoic-kit.jar"
+mainClass in assembly := Some("stoickit.StoicKit")
