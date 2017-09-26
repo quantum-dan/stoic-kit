@@ -7,7 +7,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 
+import com.typesafe.config.ConfigFactory
+
 object StoicKit {
+  val configFile = ConfigFactory.load()
+  val port: Int = configFile.getInt("server.port")
+  val host: String = configFile.getString("server.host")
+
   def main(args: Array[String]) {
     implicit val system = ActorSystem("stoic-actor-system")
     implicit val materializer = ActorMaterializer()
@@ -20,7 +26,7 @@ object StoicKit {
         }
       }
 
-    val binding = Http().bindAndHandle(route, "localhost", 8080)
+    val binding = Http().bindAndHandle(route, host, port)
     println("RETURN to stop server")
     StdIn.readLine()
     binding
