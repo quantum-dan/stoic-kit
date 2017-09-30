@@ -14,7 +14,7 @@ object StoicKit {
   val port: Int = configFile.getInt("server.port")
   val host: String = configFile.getString("server.host")
 
-  def main(args: Array[String]) {
+  def main(args: Array[String] = Array()) {
     implicit val system = ActorSystem("stoic-actor-system")
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
@@ -23,6 +23,10 @@ object StoicKit {
       path("") {
         get {
           complete("Hello, world!")
+        }
+      } ~ path("a") {
+        get {
+          complete("Hello again!")
         }
       }
 
