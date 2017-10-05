@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
 	"com.typesafe.slick" %% "slick" % "3.2.1",
 	"org.slf4j" % "slf4j-nop" % "1.6.4", // For slick
 	"com.typesafe.slick" %% "slick-hikaricp" % "3.2.1", // For Slick
-  "mysql" % "mysql-connector-java" % "5.1.+"
+  "mysql" % "mysql-connector-java" % "5.1.+",
+	"com.github.t3hnar" %% "scala-bcrypt" % "3.0"
 )
 
 mainClass in Compile := Some("stoickit.StoicKit")
@@ -22,5 +23,5 @@ artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
     artifact.name + "-" + module.revision + "." + artifact.extension
 }
 
-assemblyJarName in assembly := "stoic-kit.jar"
+assemblyJarName in assembly := s"stoic-kit.jar"
 mainClass in assembly := Some("stoickit.StoicKit")

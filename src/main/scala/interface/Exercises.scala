@@ -1,6 +1,2 @@
-package stoickit.interface
+package stoickit.interface.exercises
 
-object Exercises {
-  def test(): Int = 5;
-  def run() = println(test())
-}
