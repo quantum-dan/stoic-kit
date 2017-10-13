@@ -68,9 +68,12 @@ object ExercisesDb {
   def getExercises(query: QueryType): Future[Seq[Exercise]] = db.run(query.result)
 
   def topExercises(filtered: QueryType): QueryType = filtered.sortBy(e => (e.downvotes + 1) *
-    (e.downvotes + 1)/(e.upvotes * e.upvotes * e.completions + 1)).take(numberToLoad) // +1 avoids division by 0
+    (e.downvotes + 1)/(e.upvotes * e.upvotes * e.completions + 1)) // +1 avoids division by 0
 
-  def loadRecommendations = db.run(topExercises(exercises.filter(_.recommended)).result)
+  def recommended: QueryType = topExercises(exercises.filter(_.recommended))
+  def streamRecommended: DatabasePublisher[Exercise] = db.stream(recommended.result)
+
+  def loadRecommendations = db.run(topExercises(exercises.filter(_.recommended)).take(numberToLoad).result)
 
   def streamExercises(filtered: QueryType): DatabasePublisher[Exercise] = db.stream(filtered.result)
 

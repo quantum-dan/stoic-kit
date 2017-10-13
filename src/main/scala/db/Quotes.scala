@@ -30,6 +30,11 @@ object QuotesDb {
     }
     })
   }
+  def stream(author: Option[String] = None) = db.stream(author match {
+    case None => quotes.result
+    case Some(authorStr) => quotes.filter(_.author === author).result
+  })
+
   def getQuote(id: Int): Future[Option[Quote]] = db.run(quotes.filter(_.id === id).result.headOption)
 
   def getQuotesBy(author: String): Future[Seq[Quote]] = db.run(quotes.filter(_.author === author).result)

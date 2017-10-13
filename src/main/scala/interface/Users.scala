@@ -1,10 +1,13 @@
 package stoickit.interface.users
 
-import stoickit.db.users.UsersDb
+import stoickit.db.users
+import users.UsersDb
 import com.github.t3hnar.bcrypt._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Success, Failure}
+import scala.concurrent.duration._
+import scala.concurrent.Await
 
 case class Profile(id: Int, identifier: String, friends: Boolean, public: Boolean)
 case class Login(identifier: String, password: Option[String])
@@ -16,6 +19,9 @@ object UserTraits {
   case object NonexistentIdent extends LoginError
   case object UnknownError extends LoginError
   case object NotPasswordAccount extends LoginError // For non-password accounts when a password is given (to avoid exploits)
+
+  sealed trait CreationError
+  case object IdentExists extends CreationError // Only the one for now, but this way it's more extensible than just using an Option
 }
 
 object Users {
@@ -40,4 +46,19 @@ object Users {
       }
     })
   }
+
+  def create(info: Login): Future[Either[CreationError, Unit]] = {
+    UsersDb.getUserByIdent(info.identifier).map({
+      case Some(_) => Left(IdentExists)
+      case None => {
+        UsersDb.createUser(info.identifier, info.password)
+        Right(Unit)
+      }
+    })
+  }
+
+  def isAdmin(userId: Int): Boolean = Await.result(UsersDb.getAdminData(userId).map({
+    case None => false
+    case Some(adm) => adm.isAdmin
+  }), Duration.Inf)
 }
