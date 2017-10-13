@@ -5,6 +5,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.{Future, Await}
 import stoickit.db.users
+import slick.basic.DatabasePublisher
 
 import com.typesafe.config.ConfigFactory
 
@@ -16,6 +17,7 @@ case class Exercise(id: Int = 0,
                     duration: Int = 1, // Days
                     recommended: Boolean = false,
                     ownerId: Int, completions: Int = 0, upvotes: Int = 0, downvotes: Int = 0)
+case class ExerciseLogItem(id: Int, userId: Int, exerciseId: Int, timestamp: String)
 
 class Exercises(tag: Tag) extends Table[Exercise](tag, "exercises") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -43,6 +45,14 @@ class Exercises(tag: Tag) extends Table[Exercise](tag, "exercises") {
     temperance, desire, action, assent, duration, recommended, ownerId, completions, upvotes, downvotes) <> (Exercise.tupled, Exercise.unapply)
 }
 
+class ExerciseLog(tag: Tag) extends Table[ExerciseLogItem](tag, "exercises_log") {
+  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def userId = column[Int]("user_id") // set up foreign key constraint
+  def exerciseId = column[Int]("exercise_id")
+  def timestamp = column[String]("timestamp")
+  def * = (id, userId, exerciseId, timestamp) <> (ExerciseLogItem.tupled, ExerciseLogItem.unapply)
+}
+
 object ExercisesDb {
   val exercises = TableQuery[Exercises]
   import SqlDb._
@@ -62,4 +72,14 @@ object ExercisesDb {
 
   def loadRecommendations = db.run(topExercises(exercises.filter(_.recommended)).result)
 
+  def streamExercises(filtered: QueryType): DatabasePublisher[Exercise] = db.stream(filtered.result)
+
+}
+
+object ExerciseLogDb {
+  val exerciseLog = TableQuery[ExerciseLog]
+  import SqlDb._
+  def init = db.run(exerciseLog.schema.create)
+
+  def log(exercise: ExerciseLogItem) = db.run(exerciseLog += exercise)
 }

@@ -5,6 +5,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.{Future, Await}
 import com.github.t3hnar.bcrypt._ // password hashing
+import slick.basic.DatabasePublisher
 
 case class User(id: Int, identifier: String, password: Option[String], friendsViewable: Boolean, public: Boolean)
 
@@ -27,4 +28,6 @@ object UsersDb {
   def getUsers: Future[Seq[User]] = db.run(users.result)
   def getUserById(id: Int): Future[Option[User]] = db.run(users.filter(_.id === id).result.headOption)
   def getUserByIdent(ident: String): Future[Option[User]] = db.run(users.filter(_.identifier === ident).result.headOption)
+
+  def userStream: DatabasePublisher[User] = db.stream(users.result)
 }
