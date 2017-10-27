@@ -5,8 +5,10 @@ package stoickit.db.generic
 import slick.jdbc.MySQLProfile.api._
 import com.typesafe.config.ConfigFactory
 
+/** Functions for interaction with the SQL database */
 object SqlDb {
   val config = ConfigFactory.load()
+  /** Which database to use */
   val dbConfig = if(config.getBoolean("production")) "rdsMaria" else "localDb"
   val db = Database.forConfig(dbConfig)
   def close = db.close()

@@ -28,7 +28,7 @@ object StoicKit {
         get {
           complete("Hello again!")
         }
-      }
+      } ~ stoickit.api.quotes.Route.route
 
     val binding = Http().bindAndHandle(route, host, port)
     println("RETURN to stop server")

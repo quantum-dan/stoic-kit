@@ -7,6 +7,10 @@ import scala.concurrent.{Future, Await}
 import com.github.t3hnar.bcrypt._ // password hashing
 import slick.basic.DatabasePublisher
 
+/** @param password `Some(password)` for username/password logins, `None` for G+/Facebook logins.
+  * @param friendsViewable Whether friends can view their profile
+  * @param public Whether their profile is publicly visible
+  */
 case class User(id: Int, identifier: String, password: Option[String], friendsViewable: Boolean, public: Boolean)
 case class Admin(userId: Int, isAdmin: Boolean = true)
 
@@ -27,6 +31,7 @@ class Admins(tag: Tag) extends Table[Admin](tag, "admins") {
   def user = foreignKey("user_fk", userId, UsersDb.users)(_.id, onDelete=ForeignKeyAction.Cascade)
 }
 
+/** Contains functions for working with users */
 object UsersDb {
   val users = TableQuery[Users]
   val admins = TableQuery[Admins]

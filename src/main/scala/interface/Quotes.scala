@@ -9,6 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Quote(id: Int, author: String, content: String)
 
+/** Conversions between database and interface data types */
 object Db {
   def dbToApi(quote: quotes.Quote): Quote = Quote(quote.id, quote.author, quote.content)
   def apiToDb(quote: Quote): quotes.Quote = quotes.Quote(quote.id, quote.author, quote.content)
@@ -27,6 +28,8 @@ object Quotes {
   }
 
   def randomQuoteStream: Stream[Quote] = randomIter.toStream
+
+  def getQuote(id: Int): Option[Quote] = Await.result(quotes.QuotesDb.getQuote(id), 1.second).map(Db.dbToApi)
 
   def quoteStream[U](author: Option[String] = None)(handler: Quote => U): Unit = quotes.QuotesDb.stream(author).foreach(q => handler(Db.dbToApi(q)))
 

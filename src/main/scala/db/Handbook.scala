@@ -6,6 +6,7 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.{Future, Await}
 
 case class Chapter(id: Int, userId: Int, number: Int, title: Option[String] = None)
+/** @param chapterId If `None`, won't be associated with any chapter */
 case class Entry(id: Int, content: String, chapterId: Option[Int] = None)
 
 class Chapters(tag: Tag) extends Table[Chapter](tag, "chapters") {

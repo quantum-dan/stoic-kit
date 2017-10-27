@@ -6,14 +6,76 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.{Future, Await}
 import stoickit.db.users
 import slick.basic.DatabasePublisher
+import scala.collection.mutable.HashSet
 
 import com.typesafe.config.ConfigFactory
 
+sealed trait ExerciseType
+case object Askesis extends ExerciseType
+case object Meditation extends ExerciseType
+case object General extends ExerciseType
+
+sealed trait VirtueType
+case object Wisdom extends VirtueType
+case object Justice extends VirtueType
+case object Fortitude extends VirtueType
+case object Temperance extends VirtueType
+
+sealed trait DisciplineType
+case object Desire extends DisciplineType
+case object Assent extends DisciplineType
+case object Action extends DisciplineType
+
+object ColumnTypes {
+  implicit val exerciseSetType = MappedColumnType.base[HashSet[ExerciseType], Int]({ ets =>
+      (if (ets contains Askesis) {4} else {0}) + (if (ets contains Meditation) {2} else {0}) + (if (ets contains General) {1} else {0})
+    }, { i =>
+    var set = new HashSet(): HashSet[ExerciseType]
+    if (i >= 4) {
+      set += Askesis
+    }
+    if (i % 4 >= 2) {
+      set += Meditation
+    }
+    if (i % 6 == 1) {
+      set += General
+    }
+    set
+  })
+
+  implicit val virtueSetType = MappedColumnType.base[HashSet[VirtueType], Int]({vts =>
+    (if (vts contains Wisdom) {8} else {0}) + (if (vts contains Justice) {4} else {0}) + (if (vts contains Fortitude) {2} else {0}) + (if (vts contains Temperance) {1} else {0})
+  },
+    {i =>
+      var set = new HashSet(): HashSet[VirtueType]
+      if (i >= 8) set += Wisdom
+      if (i % 8 >= 4) set += Justice
+      if (i % 12 >= 2) set += Fortitude
+      if (i % 14 == 1) set += Temperance
+      set
+    }
+  )
+
+  implicit val disciplineSetType = MappedColumnType.base[HashSet[DisciplineType], Int]({dts =>
+    (if (dts contains Desire) 4 else 0) + (if (dts contains Assent) 2 else 0) + (if (dts contains Action) 1 else 0)
+  },
+  { i =>
+    var set = new HashSet(): HashSet[DisciplineType]
+    if (i >= 4) set += Desire
+    if (i % 4 >= 2) set += Assent
+    if (i % 6 == 1) set += Action
+    set
+  }
+  )
+}
+
+import ColumnTypes._
+
 case class Exercise(id: Int = 0,
                     title: String, description: String,
-                    askesis: Boolean = false, meditation: Boolean = false, general: Boolean = false, // Category
-                    wisdom: Boolean = false, justice: Boolean = false, fortitude: Boolean = false, temperance: Boolean = false, // Virtue
-                    desire: Boolean = false, action: Boolean = false, assent: Boolean = false, // Discipline
+                    types: HashSet[ExerciseType],
+                    virtues: HashSet[VirtueType],
+                    disciplines: HashSet[DisciplineType],
                     duration: Int = 1, // Days
                     recommended: Boolean = false,
                     ownerId: Int, completions: Int = 0, upvotes: Int = 0, downvotes: Int = 0)
@@ -23,16 +85,9 @@ class Exercises(tag: Tag) extends Table[Exercise](tag, "exercises") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def title = column[String]("title")
   def description = column[String]("description")
-  def askesis = column[Boolean]("askesis")
-  def meditation = column[Boolean]("meditation")
-  def general = column[Boolean]("general")
-  def wisdom = column[Boolean]("wisdom")
-  def justice = column[Boolean]("justice")
-  def fortitude = column[Boolean]("fortitude")
-  def temperance = column[Boolean]("temperance")
-  def desire = column[Boolean]("desire")
-  def assent = column[Boolean]("assent")
-  def action = column[Boolean]("action")
+  def types = column[HashSet[ExerciseType]]("types")
+  def virtues = column[HashSet[VirtueType]]("virtues")
+  def disciplines = column[HashSet[DisciplineType]]("disciplines")
   def duration = column[Int]("duration")
   def recommended = column[Boolean]("recommended")
   def ownerId = column[Int]("owner_id") // Note: no foreign key restriction, so that exercises created will remain
@@ -41,8 +96,8 @@ class Exercises(tag: Tag) extends Table[Exercise](tag, "exercises") {
   def upvotes = column[Int]("upvotes")
   def downvotes = column[Int]("downvotes")
 
-  def * = (id, title, description, askesis, meditation, general, wisdom, justice, fortitude,
-    temperance, desire, action, assent, duration, recommended, ownerId, completions, upvotes, downvotes) <> (Exercise.tupled, Exercise.unapply)
+  def * = (id, title, description, types, virtues, disciplines, duration, recommended, ownerId,
+    completions, upvotes, downvotes) <> (Exercise.tupled, Exercise.unapply)
 }
 
 class ExerciseLog(tag: Tag) extends Table[ExerciseLogItem](tag, "exercises_log") {
@@ -72,6 +127,8 @@ object ExercisesDb {
 
   def recommended: QueryType = topExercises(exercises.filter(_.recommended))
   def streamRecommended: DatabasePublisher[Exercise] = db.stream(recommended.result)
+
+  def streamTop: DatabasePublisher[Exercise] = db.stream(topExercises(recommended).result)
 
   def loadRecommendations = db.run(topExercises(exercises.filter(_.recommended)).take(numberToLoad).result)
 
