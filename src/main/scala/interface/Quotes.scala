@@ -40,4 +40,10 @@ object Quotes {
     }
     else Left(Unit)
   }
+  def addQuote(quote: Quote, identifier: String): Either[Unit, Unit] = {
+    Await.result(stoickit.db.users.UsersDb.getUserByIdent(identifier), 1.second) match {
+      case None => Left(Unit)
+      case Some(profile) => addQuote(quote, profile.id)
+    }
+  }
 }

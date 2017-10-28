@@ -61,4 +61,6 @@ object Users {
     case None => false
     case Some(adm) => adm.isAdmin
   }), Duration.Inf)
+
+  def makeAdmin(userId: Int) = UsersDb.makeAdmin(userId)
 }

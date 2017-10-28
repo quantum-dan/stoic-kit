@@ -47,6 +47,7 @@ object UsersDb {
 
   def userStream: DatabasePublisher[User] = db.stream(users.result)
 
+  def makeAdmin(userId: Int) = db.run(admins += Admin(userId, true))
   def getAdminData(user: User): Future[Option[Admin]] = getAdminData(user.id)
   def getAdminData(userId: Int): Future[Option[Admin]] = db.run(admins.filter(_.userId === userId).result.headOption)
 }

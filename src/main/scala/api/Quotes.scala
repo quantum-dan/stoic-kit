@@ -15,6 +15,8 @@ import akka.util.ByteString
 
 object Route {
   implicit val quoteFormat = jsonFormat3(quotes.Quote)
+  case class Success(success: Boolean)
+  implicit val successFormat = jsonFormat1(Success)
 
   val randomQuotes = Source.fromIterator(() => quotes.Quotes.randomQuoteStream.toIterator)
   val chunkedQuotes = randomQuotes.map({q =>
@@ -32,7 +34,13 @@ object Route {
             case Some(quote) => quote
           }
         )
-      }
+      } ~
+      post(cookie("identifier")(identCookie => entity(as[quotes.Quote]) { quote =>
+        quotes.Quotes.addQuote(quote, identCookie.value) match {
+          case Left(_) => complete(Success(false))
+          case Right(_) => complete(Success(true))
+        }
+      }))
     } ~
     pathPrefix("quote" / IntNumber) { id =>
       get {
