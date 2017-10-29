@@ -1,0 +1,13 @@
+<div>
+    <material-input label="Identifier"
+                    [(ngModel)]="ident"></material-input>
+    <material-input label="Password" [(ngModel)]="password"></material-input>
+    <material-fab raised
+                  (trigger)="login()"
+                  [disabled]="ident.isEmpty">Login</material-fab>
+</div>
+<div>
+    <p>{{result}}</p>
+    <p>Identifier: {{ident}}</p>
+    <p *ngIf="password.isNotEmpty">Password: {{password}}</p>
+</div>
