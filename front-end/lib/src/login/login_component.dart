@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:html';
+import 'dart:convert';
 
 import 'package:angular/angular.dart';
 import 'package:angular_components/angular_components.dart';
@@ -17,12 +19,14 @@ class LoginComponent implements OnInit {
   String result = "Enter credentials";
   LoginComponent();
 
-  void login() {
-    if (ident == "abc" && password == "password") {
-      result = "Success!";
-    } else {
-      result = "Nope!";
-    }
+  Future<Null> login() async {
+    Map<String, String> credentials = {"identifier": ident, "password": password};
+    String credString = JSON.encode(credentials);
+    HttpRequest req = new HttpRequest();
+    req.open("POST", "/login");
+    req.onReadyStateChange.listen((_) => result = req.responseText);
+    req.setRequestHeader("Content-type", "application/json");
+    req.send(credString);
   }
 
   @override

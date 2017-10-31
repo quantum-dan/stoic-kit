@@ -26,20 +26,10 @@ object StoicKit {
         get {
           complete("Hello, world!")
         }
-      } ~ path("a") {
-        get {
-          complete("Hello again!")
-        }
-      } ~ stoickit.api.quotes.Route.route ~
-      stoickit.api.users.Route.route ~
-      path("b") {
-        get {
-          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<html> <body> <script src=\"/c\"></script> </body> </html>"))
-        }
       } ~
-      path("c") {
-        getFromFile("/home/daniel/dart/sk.js")
-      }
+      pathPrefix("html")(getFromDirectory("front-end/build/web")) ~
+      stoickit.api.quotes.Route.route ~
+      stoickit.api.users.Route.route
     val binding = Http().bindAndHandle(route, host, port)
     println("RETURN to stop server")
     StdIn.readLine()

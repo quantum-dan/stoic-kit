@@ -1,0 +1,5 @@
+<span *ngIf="content.isEmpty">
+    No quote loaded.  Load quote?
+</span>
+<span *ngIf="content.isNotEmpty"><p>Author: {{author}}</p><p>{{content}}</p></span>
+<span><material-button (trigger)="load()">Load Quote</material-button></span>
