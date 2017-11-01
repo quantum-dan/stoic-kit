@@ -1,0 +1,17 @@
+<form>
+    <p>Add a new quote:</p>
+    <p><material-input
+        label="Author"
+        [(ngModel)]="author"></material-input></p>
+    <p>
+        <textarea rows="10" cols="80"
+            placeholder="Quote"
+            [(ngModel)]="content"></textarea>
+    </p>
+    <p>
+        <material-button raised
+                         (trigger)="submit()"
+                         [disabled]="author.isEmpty||content.isEmpty">Submit</material-button>
+    </p>
+</form>
+<p *ngIf="result.isNotEmpty">{{result}}</p>

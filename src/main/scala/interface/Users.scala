@@ -61,6 +61,10 @@ object Users {
     case None => false
     case Some(adm) => adm.isAdmin
   }), Duration.Inf)
+  def isAdmin(identifier: String): Boolean = Await.result(UsersDb.getUserByIdent(identifier), Duration.Inf) match {
+    case None => false
+    case Some(profile) => isAdmin(profile.id)
+  }
 
   def makeAdmin(userId: Int) = UsersDb.makeAdmin(userId)
 }

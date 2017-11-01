@@ -15,6 +15,7 @@ object StoicKit {
   val configFile = ConfigFactory.load()
   val port: Int = configFile.getInt("server.port")
   val host: String = configFile.getString("server.host")
+  val index: String = configFile.getString("index")
 
   def main(args: Array[String] = Array()) {
     implicit val system = ActorSystem("stoic-actor-system")
@@ -22,14 +23,10 @@ object StoicKit {
     implicit val executionContext = system.dispatcher
 
     val route =
-      path("") {
-        get {
-          complete("Hello, world!")
-        }
-      } ~
+      path("")(getFromFile(index)) ~
       pathPrefix("html")(getFromDirectory("front-end/build/web")) ~
-      stoickit.api.quotes.Route.route ~
-      stoickit.api.users.Route.route
+      pathPrefix("quote")(stoickit.api.quotes.Route.route) ~
+      pathPrefix("user")(stoickit.api.users.Route.route)
     val binding = Http().bindAndHandle(route, host, port)
     println("RETURN to stop server")
     StdIn.readLine()

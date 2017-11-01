@@ -20,13 +20,13 @@ object Route {
   case class Success(success: Boolean)
   implicit val successFormat = jsonFormat1(Success)
 
-  val route = path("login") {
+  val route = path("") {
     post {
       entity(as[Login]) { login: Login =>
         val eitherProfile = Await.result(Users.login(login), 1.second)
         eitherProfile match {
           case Left(err) => complete(err.toString)
-          case Right(profile) => setCookie(HttpCookie("identifier", value = profile.identifier))(complete(profile))
+          case Right(profile) => setCookie(HttpCookie("identifier", value = profile.identifier, path=Some("/")))(complete(profile))
         }
       }
     } ~ get {
@@ -43,5 +43,10 @@ object Route {
       case Left(err) => complete(err.toString)
       case Right(_) => complete(Success(true))
     }}
-  })
+  }) ~ path("admin")(get {
+    optionalCookie("identifier") {
+      case Some(cookie) => complete(Success(Users.isAdmin(cookie.value)))
+      case None => complete(Success(false))
+    }
+  }) ~ path("logout")(deleteCookie("identifier", path="/")(complete(Success(true))))
 }

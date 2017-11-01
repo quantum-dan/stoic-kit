@@ -25,7 +25,7 @@ object Route {
   })
 
   val route: Route =
-    path("quote") {
+    path("") {
       get {
         val quoteOption: Option[quotes.Quote] = quotes.Quotes.randomQuote()
         complete(
@@ -42,7 +42,7 @@ object Route {
         }
       }))
     } ~
-    pathPrefix("quote" / IntNumber) { id =>
+    pathPrefix("id" / IntNumber) { id =>
       get {
         val quoteOption: Option[quotes.Quote] = quotes.Quotes.getQuote(id)
         complete(quoteOption match {

@@ -1,4 +1,4 @@
-<div>
+<div *ngIf="!loggedIn"><div>
     <material-input label="Identifier"
                     [(ngModel)]="ident"></material-input>
     <material-input label="Password" [(ngModel)]="password"></material-input>
@@ -8,6 +8,9 @@
 </div>
 <div>
     <p>{{result}}</p>
-    <p>Identifier: {{ident}}</p>
-    <p *ngIf="password.isNotEmpty">Password: {{password}}</p>
 </div>
+</div>
+<p *ngIf="loggedIn">Logged in as: {{identifier}}.
+    <material-button raised
+                     (trigger)="logout()">Log Out</material-button>
+</p>
