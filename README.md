@@ -3,6 +3,7 @@ Website and app developed to help Stoics with their practice.
 
 # Features
 ## Currently implemented
+* Quotes
 
 ## To be implemented
 * Askesis suggestions (created by users, maybe)
@@ -12,7 +13,6 @@ Website and app developed to help Stoics with their practice.
 * Exercises suggestions (maybe from users)
 * Exercises log
 * Resources page with links to free versions of Stoic texts
-* Quotes
 
 # Implementation
 * HTTP server tracking all data
@@ -20,23 +20,21 @@ Website and app developed to help Stoics with their practice.
 * App connecting to server
 
 ## HTTP Server
-Tech possibilities:
-* akka-http (Scala/Java library): Allows for efficient asynchronous code on the JVM.
-* Yesod (Haskell framework): Good performance with all the benefits and costs of Haskell (safety vs learning curve).
-* Golang libraries: Simple and straightforward, good performance, not especially elegant but it gets the job done.
+Implemented with Scala using akka-http for HTTP and Slick for SQL data.  DynamoDB approach to be determined, but
+DynamoDB supports JDBC so that should be doable.
 
 Notes:
 * Run on AWS EC2 (works well).  FreeBSD is ideal due to its TCP/IP performance, RHEL is also a good option.
 * Connect to AWS RDS database, MariaDB is easy and works fine.
-* Less structured data (e.g. texts, if stored directly) would work well with AWS DynamoDB, which supports, notably, Go and Java.
+* Less structured data (e.g. texts, if stored directly) would work well with AWS DynamoDB, which supports,
+notably, Go and Java.
 
 ## Website
-Dart is a solid choice of a language.  Static types can be used to enforce safety, it's compiled, it's easy to learn,
-clean, pragmatic design.  Works well with just the standard library (direct DOM manipulations), also has first-class
-support with Angular.  I would lean towards using Angular as the full site is likely to be moderately complicated.
+Implemented with AngularDart--that is, Angular framework, Dart language.
+Note on streaming information: grab part of the stream, parse, transfer to a list as necessary.
 
 ## App
-There is the obvious option of native design, with Kotlin, Swift and C#.  Better performance and a more native look,
+There is the obvious option of native design, with Java/Kotlin, Swift and C#.  Better performance and a more native look,
 at he cost of more learning and maintenance.
 
 Alternatively, Google's Flutter looks promising as a cross-platform framework.
