@@ -26,7 +26,8 @@ object StoicKit {
       path("")(getFromFile(index)) ~
       pathPrefix("html")(getFromDirectory("front-end/build/web")) ~
       pathPrefix("quote")(stoickit.api.quotes.Route.route) ~
-      pathPrefix("user")(stoickit.api.users.Route.route)
+      pathPrefix("user")(stoickit.api.users.Route.route) ~
+      pathPrefix("handbook")(stoickit.api.handbook.Route.route)
     val binding = Http().bindAndHandle(route, host, port)
     println("RETURN to stop server")
     StdIn.readLine()

@@ -57,6 +57,8 @@ object Users {
     })
   }
 
+  def getId(identifier: String): Option[Int] = Await.result(UsersDb.getUserByIdent(identifier), 1.second).map(_.id)
+
   def isAdmin(userId: Int): Boolean = Await.result(UsersDb.getAdminData(userId).map({
     case None => false
     case Some(adm) => adm.isAdmin

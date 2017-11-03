@@ -7,6 +7,7 @@ import "src/login/login_component.dart";
 import "src/quotes/quotes_component.dart";
 import "src/login/create_account_component.dart";
 import "src/quotes/quotes_stream_component.dart";
+import "src/handbook/main_component.dart";
 
 // AngularDart info: https://webdev.dartlang.org/angular
 // Components info: https://webdev.dartlang.org/components
@@ -16,14 +17,15 @@ import "src/quotes/quotes_stream_component.dart";
   styleUrls: const ['app_component.css'],
   templateUrl: 'app_component.html',
   directives: const [materialDirectives, TodoListComponent, LoginComponent,
-    QuoteComponent, ROUTER_DIRECTIVES, AccountFormComponent, QuoteStreamComponent],
+    QuoteComponent, ROUTER_DIRECTIVES, AccountFormComponent, QuoteStreamComponent,
+    MainHandbookComponent],
   providers: const [materialProviders],
 )
 @RouteConfig(const[
   const Route(path: "/login", name: "Login", component: LoginComponent),
   const Route(path: "/quotes", name: "Quotes", component: QuoteComponent),
-  const Route(path: "/create", name: "Create Account", component: AccountFormComponent)
+  const Route(path: "/create", name: "Create Account", component: AccountFormComponent),
+  const Route(path: "/handbook", name: "Handbook", component: MainHandbookComponent)
 ])
 class AppComponent {
-  // Nothing here yet. All logic is in TodoListComponent.
 }

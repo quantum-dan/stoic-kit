@@ -4,6 +4,7 @@ package stoickit.db.generic
 
 import slick.jdbc.MySQLProfile.api._
 import com.typesafe.config.ConfigFactory
+import scala.concurrent.Future
 
 /** Functions for interaction with the SQL database */
 object SqlDb {

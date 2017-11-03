@@ -5,7 +5,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Await}
 import stoickit.interface.generic
 
-trait Filter
+sealed trait Filter
 
 object Exercises {
   type Exercise = exercises.Exercise

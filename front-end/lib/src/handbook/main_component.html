@@ -1,0 +1,22 @@
+<div *ngIf="loggedIn"><form>
+    <p>Add a new meditation:</p>
+    <material-input label="Your Meditation"
+                    [(ngModel)]="content"
+                    multiline
+                    rows="5" style="width: 80%"></material-input><br />
+    <material-button raised
+                     (trigger)="create()"
+                     [disabled]="content.isEmpty">Add</material-button>
+    <p *ngIf="result.isNotEmpty">{{result}}</p>
+    </form>
+    <div>
+        <h4>Your most recent meditations:</h4>
+        <material-button raised
+                         (trigger)="loadEntries()">Refresh</material-button>
+        <p *ngIf="entries.isEmpty">You don't have any meditations.</p>
+        <p *ngFor="let entry of entries">{{entry.content}}</p>
+    </div>
+</div>
+<div *ngIf="!loggedIn">
+    You need to be logged in to use the handbook.  Please log in.
+</div>
