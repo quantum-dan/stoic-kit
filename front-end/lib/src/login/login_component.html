@@ -1,7 +1,8 @@
 <div *ngIf="!loggedIn"><div>
     <material-input label="Identifier"
                     [(ngModel)]="ident"></material-input>
-    <material-input label="Password" [(ngModel)]="password"></material-input>
+    <material-input label="Password" [(ngModel)]="password" type="password"
+                    (keyup.enter)="login()"></material-input>
     <material-button raised
                   (trigger)="login()"
                   [disabled]="ident.isEmpty">Login</material-button>

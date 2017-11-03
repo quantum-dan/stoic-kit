@@ -25,10 +25,15 @@ class QuoteFormComponent implements OnInit {
         "content": content,
         "id": 0
       };
+      author = "";
+      content = "";
       String jsonString = JSON.encode(jsonMap);
       HttpRequest req = new HttpRequest();
       req.open("POST", "/quote/");
-      req.onReadyStateChange.listen((_) => result = req.responseText);
+      req.onReadyStateChange.listen((_) {
+        Map data = JSON.decode(req.responseText);
+        result = data["success"] ? "Success!" : "Error: ${data['result']}";
+      });
       req.setRequestHeader("Content-type", "application/json");
       req.send(jsonString);
     }

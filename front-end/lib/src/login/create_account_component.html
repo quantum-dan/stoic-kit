@@ -1,0 +1,16 @@
+<form>
+    <p>Create an account:</p>
+    <material-input label="Identifier"
+                    [(ngModel)]="identifier"></material-input>
+    <material-input label="Password"
+                    type="password"
+                    [(ngModel)]="password"></material-input>
+    <material-input label="Re-enter password"
+                    type="password"
+                    (keyup.enter)="create()"
+                    [(ngModel)]="password2"></material-input>
+    <material-button raised
+                     (trigger)="create()"
+                     [disabled]="identifier.isEmpty||password.isEmpty||password2.isEmpty">Submit</material-button>
+</form>
+<p *ngIf="result.isNotEmpty">{{result}}</p>

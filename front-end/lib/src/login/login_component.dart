@@ -23,12 +23,14 @@ class LoginComponent implements OnInit {
 
   Future<Null> check() async {
     String dataString = await HttpRequest.getString("/user/");
-    if (dataString[0] != "{") { // not JSON
+    Map data = JSON.decode(dataString);
+    if (data["success"]) {
       loggedIn = true;
-      identifier = dataString;
+      identifier = data["result"];
     } else {
       loggedIn = false;
       identifier = "";
+      result = "Enter credentials";
     }
   }
 
@@ -38,16 +40,25 @@ class LoginComponent implements OnInit {
     HttpRequest req = new HttpRequest();
     req.open("POST", "/user/");
     req.onReadyStateChange.listen((_) {
-      result = req.responseText;
-      check();
+      Map data = JSON.decode(req.responseText);
+      if (data["success"] != false) { // Because it will be null, not true, if successful
+        result = "Success!";
+        check();
+      } else {
+        result = "Error: ${data['result']}";
+      }
     });
     req.setRequestHeader("Content-type", "application/json");
     req.send(credString);
   }
 
   Future<Null> logout() async {
-    HttpRequest.getString("/user/logout");
-    check();
+    ident = "";
+    password = "";
+    HttpRequest req = new HttpRequest();
+    req.open("GET", "/user/logout");
+    req.onReadyStateChange.listen((_) => check());
+    req.send();
   }
 
   @override

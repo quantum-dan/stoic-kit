@@ -6,6 +6,7 @@ import 'package:angular/angular.dart';
 import 'package:angular_components/angular_components.dart';
 
 import "quotes_form_component.dart";
+import "quotes_stream_component.dart";
 
 @Component(
   selector: "quote",
@@ -13,7 +14,8 @@ import "quotes_form_component.dart";
   directives: const [
     CORE_DIRECTIVES,
     materialDirectives,
-    QuoteFormComponent
+    QuoteFormComponent,
+    QuoteStreamComponent
   ]
 )
 class QuoteComponent implements OnInit {
@@ -31,8 +33,7 @@ class QuoteComponent implements OnInit {
 
   @override
   Future<Null> ngOnInit() async {
-    author = "";
-    content = "";
+    load();
     isAdmin = JSON.decode(await HttpRequest.getString("/user/admin"))["success"];
   }
 }

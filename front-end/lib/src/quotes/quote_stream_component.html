@@ -1,0 +1,7 @@
+<div>
+    <h4>Quotes:</h4>
+    <p *ngFor="let quote of quotesList">{{quote.content}}<br />-{{quote.author}}</p>
+    <material-button
+        raised
+        (trigger)="update()">Load More</material-button>
+</div>

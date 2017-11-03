@@ -4,9 +4,9 @@
         label="Author"
         [(ngModel)]="author"></material-input></p>
     <p>
-        <textarea rows="10" cols="80"
-            placeholder="Quote"
-            [(ngModel)]="content"></textarea>
+        <material-input multiline rows="5" style="width: 80%"
+            label="Quote"
+            [(ngModel)]="content"></material-input>
     </p>
     <p>
         <material-button raised
