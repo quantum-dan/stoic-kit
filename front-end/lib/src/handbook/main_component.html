@@ -35,9 +35,11 @@
         <p *ngIf="entries.isEmpty">You don't have any meditations.</p>
         <p *ngFor="let entry of entries">{{entry.content}}</p>
     </div>
+    <h3>Generate Handbook:</h3>
+    <div><a target="_blank" href="/handbook/html/all">Full Handbook</a></div>
     <div *ngIf="chapters.isNotEmpty">
         <h4>Chapters:</h4>
-        <p *ngFor="let chapter of chapters">Chapter {{chapter.number}}<span *ngIf="chapter.title.isNotEmpty">: {{chapter.title}}</span></p>
+        <p *ngFor="let chapter of chapters"><a target="_blank" href="/handbook/html/chapter/{{chapter.id}}">Chapter {{chapter.number}}<span *ngIf="chapter.title.isNotEmpty">: {{chapter.title}}</span></a></p>
     </div>
 </div>
 <div *ngIf="!loggedIn">

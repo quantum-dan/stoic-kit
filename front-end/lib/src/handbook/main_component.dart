@@ -49,7 +49,7 @@ class MainHandbookComponent implements OnInit {
 
   Future<Null> create() async {
     HttpRequest req = new HttpRequest();
-    req.open("POST", "/handbook/");
+    req.open("POST", selectedChapter == null ? "/handbook/" : "/handbook/chapter/${selectedChapter.id}");
     req.setRequestHeader("Content-type", "application/json");
     req.onReadyStateChange.listen((_) {
       loadEntries();
