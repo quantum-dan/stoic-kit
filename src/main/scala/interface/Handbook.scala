@@ -35,6 +35,13 @@ object Entries {
   def getByUser(userId: Int): Future[Seq[Entry]] = EntriesDb.getByUser(userId).map(_.map(fromDb))
   def getByChapter(chapterId: Int): Future[Seq[Entry]] = EntriesDb.getByChapter(chapterId).map(_.map(fromDb))
 
+  /** This version confirms that the user owns the chapter */
+  def getByChapter(userId: Int, chapterId: Int): Option[Future[Seq[Entry]]] = Await.result(Chapters.get(chapterId), Duration.Inf).
+    flatMap({chapter =>
+      if (chapter.userId == userId) Some(getByChapter(chapter.id))
+      else None
+  })
+
   def byChapters(entries: Seq[Entry]): Seq[FullChapter] = {
     val chapterIds: Seq[Int] = entries.map(_.chapterId).filter(id => !(id.isEmpty)).map(_.get). // Note: by non-empty filter, can't throw an error
       toSet[Int].toSeq.sortWith((a, b) => a < b)
@@ -43,4 +50,31 @@ object Entries {
     chapters
   }
   def unChaptered(entries: Seq[Entry]): Seq[Entry] = entries.filter(_.chapterId.isEmpty)
+}
+
+/** HTML generators for a handbook people can download */
+object HandbookHtml {
+  def entries(entries: Seq[Entry]): String = {
+    if (entries.nonEmpty) entries.map(e => s"<p>${e.content}</p>").reduceLeft((a, b) => a ++ b)
+    else ""
+  }
+
+  def chapter(entries: Seq[Entry], title: Option[String], number: Int): String = {
+    val entriesString = this.entries(entries)
+    val titleString = s"<h4>Chapter $number" ++ (title match { case None => "" case Some(str) => s": $str"}) ++ "</h4>"
+    s"$titleString$entriesString"
+  }
+
+  def fullChapters(chapters: Seq[FullChapter]): String = {
+    if (chapters.nonEmpty) chapters.map(fch =>
+      s"<div>${chapter(fch.entries, fch.chapter.title, fch.chapter.number)}</div>").reduceLeft((a, b) => a ++ b)
+    else ""
+  }
+
+  def all(chapters: Seq[FullChapter], unchaptered: Seq[Entry]) =
+    fullChapters(chapters) ++ "<h3>Unchaptered:</h3>" ++ entries(unchaptered)
+
+  def htmlChapter(entries: Seq[Entry], title: Option[String], number: Int) = s"<html><body>${chapter(entries, title, number)}</body></html>"
+  def htmlAll(chapters: Seq[FullChapter], unchaptered: Seq[Entry]) =
+    s"<html><body>${all(chapters, unchaptered)}</body></html>"
 }
