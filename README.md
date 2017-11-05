@@ -1,6 +1,8 @@
 # StoicKit
 Website and app developed to help Stoics with their practice.
 
+This branch is designed to use a local SQLite database and run locally, so I don't need to pay for a server.
+
 # Features
 ## Currently implemented
 * Quotes
