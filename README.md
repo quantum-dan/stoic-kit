@@ -4,12 +4,12 @@ Website and app developed to help Stoics with their practice.
 # Features
 ## Currently implemented
 * Quotes
+* Meditations log + handbook generator
 
 ## To be implemented
 * Askesis suggestions (created by users, maybe)
 * Askesis log
 * Reminders to write down daily meditations (with topic suggestions?)
-* Meditations log
 * Exercises suggestions (maybe from users)
 * Exercises log
 * Resources page with links to free versions of Stoic texts
