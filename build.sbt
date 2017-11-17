@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
 	"org.slf4j" % "slf4j-nop" % "1.6.4", // For slick
 	"com.typesafe.slick" %% "slick-hikaricp" % "3.2.1", // For Slick
   "mysql" % "mysql-connector-java" % "5.1.+",
+	"org.xerial" % "sqlite-jdbc" % "3.7.2",
 	"com.github.t3hnar" %% "scala-bcrypt" % "3.0"
 )
 

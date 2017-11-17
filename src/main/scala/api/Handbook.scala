@@ -1,6 +1,7 @@
 package stoickit.api.handbook
 
 import stoickit.interface.handbook._
+import stoickit.db.handbook.Implicits._
 import stoickit.interface.users.Users.getId
 
 import stoickit.api.users.LoginCookie.withLoginCookie
@@ -19,6 +20,9 @@ import scala.concurrent.duration._
 object Route {
   val nToTake: Int = 10
 
+  val entries = new Entries()
+  val chapters = new Chapters()
+
   case class Success(success: Boolean = true, result: String = "")
 
   implicit val chapterFormat = jsonFormat4(Chapter)
@@ -34,50 +38,50 @@ object Route {
   val route = routeWrapper { userId: Int =>
     path("") {
       get {
-        complete(Await.result(Entries.getByUser(userId), Duration.Inf).takeRight(nToTake))
+        complete(entries.getByUser(userId).takeRight(nToTake))
       } ~ post (entity(as[Entry]) { entry =>
-        Entries.create(entry.copy(userId = userId, chapterId = None))
+        entries.create(entry.copy(userId = userId, chapterId = None))
         complete(Success())
       })
     } ~ path("chapter") {
       post (entity(as[Chapter]) { chapter =>
-        onSuccess(Chapters.create(chapter.copy(userId = userId)))(id => complete(Success(true, id.toString())))
+        onSuccess(chapters.create(chapter.copy(userId = userId)))(id => complete(Success(true, id.toString())))
       })
     } ~ path("chapters") {
-      get { onSuccess(Chapters.getChapters(userId))(chapters => complete(chapters))}
+      get { complete(chapters.getChapters(userId)) }
     } ~ pathPrefix("chapter" / IntNumber) { chapterId =>
       get {
-        Entries.getByChapter(userId, chapterId) match {
+        entries.getByChapter(userId, chapterId) match {
           case None => complete(StatusCodes.Unauthorized)
-          case Some(futureEntries) => onSuccess(futureEntries)(entries => complete(entries))
+          case Some(entriesResult) => complete(entriesResult)
         }
       } ~ post (entity(as[Entry]) { entry =>
-        val mChapter = Await.result(Chapters.get(chapterId), Duration.Inf)
+        val mChapter = chapters.get(chapterId)
         mChapter match {
           case None => complete(StatusCodes.NotFound)
           case Some(chapter: Chapter) => if (chapter.userId == userId) {
-            Entries.create(entry.copy(userId = userId, chapterId = Some(chapter.id)))
+            entries.create(entry.copy(userId = userId, chapterId = Some(chapter.id)))
             complete(Success())
           } else complete(StatusCodes.Unauthorized)
         }
       })
     } ~ pathPrefix("html") { // Generates plain HTML documents for the user to keep--their own local copy of the handbook
       pathPrefix("chapter" / IntNumber) { chapterId =>
-        onSuccess(Chapters.get(chapterId)) {
+        chapters.get(chapterId) match {
           case Some(chapter) => {
             if (chapter.userId == userId) {
-              onSuccess(Entries.getByChapter(chapter.id)) { entries =>
-                complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, HandbookHtml.htmlChapter(entries, chapter.title, chapter.number)))
-              }
+              val entriesResult = entries.getByChapter(chapter.id)
+                complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, HandbookHtml.htmlChapter(entriesResult, chapter.title, chapter.number)))
             }
             else complete(StatusCodes.Unauthorized)
           }
           case None => complete(StatusCodes.NotFound)
         }
-      } ~ path("all")(onSuccess(Entries.getByUser(userId)) { entries =>
-        val fullChapters = Entries.byChapters(entries)
-        val unChaptered = Entries.unChaptered(entries)
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, HandbookHtml.htmlAll(fullChapters, unChaptered)))
+      } ~ path("all")({
+        val entriesResult = entries.getByUser(userId)
+        val fullchapters = entries.byChapters(entriesResult)
+        val unChaptered = entries.unChaptered(entriesResult)
+        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, HandbookHtml.htmlAll(fullchapters, unChaptered)))
       })
     }
   }
