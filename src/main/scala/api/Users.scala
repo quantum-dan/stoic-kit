@@ -1,6 +1,7 @@
 package stoickit.api.users
 
 import stoickit.interface.users._
+import stoickit.db.users.Implicits._
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.Http
@@ -16,6 +17,12 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object LoginCookie {
+  /* Security:
+   * Store the identifier and IP address in plain text.
+   * Store a hash of identifier + IP, with the password as secret, as a signature
+   * Hashed with HMAC, SHA512, using password as a secret (is that secure?  Hopefully)
+   * See: https://github.com/Nycto/Hasher
+   */
   def loginCookie(identifier: String) = HttpCookie("identifier", value = identifier, path=Some("/"))
   def readLoginCookie(cookiePair: HttpCookiePair): Option[String] = Some(cookiePair.value)
   def withLoginCookie(f: String => server.Route) = cookie("identifier")(readLoginCookie(_) match {
@@ -32,10 +39,12 @@ object Route {
   case class Success(success: Boolean, result: String = "")
   implicit val successFormat = jsonFormat2(Success)
 
+  def usersHandler() = new Users()
+
   val route = path("") {
     post {
       entity(as[Login]) { login: Login =>
-        val eitherProfile = Await.result(Users.login(login), 1.second)
+        val eitherProfile = usersHandler.login(login)
         eitherProfile match {
           case Left(err) => complete(Success(false, err.toString))
           case Right(profile) => setCookie(loginCookie(profile.identifier))(complete(profile))
@@ -51,13 +60,13 @@ object Route {
       })
     }
   } ~ path("create")(post{
-    entity(as[Login]) { login => Await.result(Users.create(login), 1.second) match {
+    entity(as[Login]) { login => usersHandler.create(login) match {
       case Left(err) => complete(Success(false, err.toString))
       case Right(_) => complete(Success(true))
     }}
   }) ~ path("admin")(get {
     optionalCookie("identifier") (_.flatMap(readLoginCookie) match {
-      case Some(ident) => complete(Success(Users.isAdmin(ident)))
+      case Some(ident) => complete(Success(usersHandler.isAdmin(ident)))
       case None => complete(Success(false))
     })
   }) ~ path("logout")(deleteCookie("identifier", path="/")(complete(Success(true))))

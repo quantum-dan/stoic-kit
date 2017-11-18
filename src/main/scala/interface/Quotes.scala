@@ -1,24 +1,27 @@
 package stoickit.interface.quotes
 
+import stoickit.interface.users.Users
+import stoickit.db.users.Implicits._
+
 import stoickit.db.quotes
-import stoickit.interface.users
 import scala.concurrent.duration._
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.collection.immutable.Stream
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Quote(id: Int, author: String, content: String)
 
-/** Conversions between database and interface data types */
-object Db {
-  def dbToApi(quote: quotes.Quote): Quote = Quote(quote.id, quote.author, quote.content)
-  def apiToDb(quote: Quote): quotes.Quote = quotes.Quote(quote.id, quote.author, quote.content)
+abstract class QuotesProvider {
+  def randomQuote(): Future[Option[Quote]]
+  def get(id: Int): Future[Option[Quote]]
+  def create(quote: Quote): Future[Int]
 }
 
-object Quotes {
-  def randomQuote(): Option[Quote] = Await.result(quotes.QuotesDb.randomQuote, 1.second).map(Db.dbToApi)
+class Quotes(duration: Duration = Duration.Inf)(implicit quotesDb: QuotesProvider) {
+  def usersHandler() = new Users()
+  def randomQuote(): Option[Quote] = Await.result(quotesDb.randomQuote(), duration)
 
-  val randomIter: Iterator[Quote] = new Iterator[Quote] {
+  def randomIter: Iterator[Quote] = new Iterator[Quote] {
     def hasNext = true
 
     def next(): Quote = randomQuote() match {
@@ -29,21 +32,18 @@ object Quotes {
 
   def randomQuoteStream: Stream[Quote] = randomIter.toStream
 
-  def getQuote(id: Int): Option[Quote] = Await.result(quotes.QuotesDb.getQuote(id), 1.second).map(Db.dbToApi)
-
-  def quoteStream[U](author: Option[String] = None)(handler: Quote => U): Unit = quotes.QuotesDb.stream(author).foreach(q => handler(Db.dbToApi(q)))
+  def getQuote(id: Int): Option[Quote] = Await.result(quotesDb.get(id), duration)
 
   def addQuote(quote: Quote, userId: Int): Either[Unit, Unit] = {
-    if (users.Users.isAdmin(userId)) {
-      quotes.QuotesDb.addQuote(Db.apiToDb(quote))
+    if (usersHandler.isAdmin(userId)) {
+      quotesDb.create(quote)
       Right(Unit)
-    }
-    else Left(Unit)
+    } else Left(Unit)
   }
   def addQuote(quote: Quote, identifier: String): Either[Unit, Unit] = {
-    Await.result(stoickit.db.users.UsersDb.getUserByIdent(identifier), 1.second) match {
-      case None => Left(Unit)
-      case Some(profile) => addQuote(quote, profile.id)
-    }
+    if (usersHandler.isAdmin(identifier)) {
+      quotesDb.create(quote)
+      Right(Unit)
+    } else Left(Unit)
   }
 }

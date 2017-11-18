@@ -2,7 +2,8 @@ package stoickit.api.handbook
 
 import stoickit.interface.handbook._
 import stoickit.db.handbook.Implicits._
-import stoickit.interface.users.Users.getId
+import stoickit.interface.users.Users
+import stoickit.db.users.Implicits._
 
 import stoickit.api.users.LoginCookie.withLoginCookie
 
@@ -20,8 +21,9 @@ import scala.concurrent.duration._
 object Route {
   val nToTake: Int = 10
 
-  val entries = new Entries()
-  val chapters = new Chapters()
+  // So that all the requests aren't trying to use the same object and hence waiting on it
+  def entries(): Entries = new Entries()
+  def chapters(): Chapters = new Chapters()
 
   case class Success(success: Boolean = true, result: String = "")
 
@@ -30,7 +32,7 @@ object Route {
   implicit val fullChapterFormat = jsonFormat2(FullChapter)
   implicit val successFormat = jsonFormat2(Success)
 
-  def routeWrapper(f: Int => server.Route): server.Route = withLoginCookie(getId(_) match {
+  def routeWrapper(f: Int => server.Route): server.Route = withLoginCookie(new Users().getId(_) match {
     case None => complete(StatusCodes.Unauthorized)
     case Some(userId) => f(userId)
   })

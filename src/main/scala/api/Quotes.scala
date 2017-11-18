@@ -1,6 +1,7 @@
 package stoickit.api.quotes
 
 import stoickit.interface.quotes
+import stoickit.db.quotes.Implicits._
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.Http
@@ -18,7 +19,9 @@ object Route {
   case class Success(success: Boolean)
   implicit val successFormat = jsonFormat1(Success)
 
-  val randomQuotes = Source.fromIterator(() => quotes.Quotes.randomQuoteStream.toIterator)
+  def quotesHandler() = new quotes.Quotes()
+
+  val randomQuotes = Source.fromIterator(() => quotesHandler.randomQuoteStream.toIterator)
   val chunkedQuotes = randomQuotes.map({q =>
     val jsonString = q.toJson.compactPrint
     HttpEntity.Chunk(ByteString(jsonString))
@@ -27,7 +30,7 @@ object Route {
   val route: Route =
     path("") {
       get {
-        val quoteOption: Option[quotes.Quote] = quotes.Quotes.randomQuote()
+        val quoteOption: Option[quotes.Quote] = quotesHandler.randomQuote()
         complete(
           quoteOption match {
             case None => StatusCodes.NotFound
@@ -36,7 +39,7 @@ object Route {
         )
       } ~
       post(cookie("identifier")(identCookie => entity(as[quotes.Quote]) { quote =>
-        quotes.Quotes.addQuote(quote, identCookie.value) match {
+        quotesHandler.addQuote(quote, identCookie.value) match {
           case Left(_) => complete(Success(false))
           case Right(_) => complete(Success(true))
         }
@@ -44,7 +47,7 @@ object Route {
     } ~
     pathPrefix("id" / IntNumber) { id =>
       get {
-        val quoteOption: Option[quotes.Quote] = quotes.Quotes.getQuote(id)
+        val quoteOption: Option[quotes.Quote] = quotesHandler.getQuote(id)
         complete(quoteOption match {
           case None => StatusCodes.NotFound
           case Some(quote) => quote

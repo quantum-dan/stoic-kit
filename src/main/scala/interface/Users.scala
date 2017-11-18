@@ -10,7 +10,18 @@ import scala.concurrent.duration._
 import scala.concurrent.Await
 
 case class Profile(id: Int, identifier: String, friends: Boolean, public: Boolean)
+case class User(id: Int, identifier: String, password: Option[String], friends: Boolean, public: Boolean) {
+  def profile(): Profile = Profile(id, identifier, friends, public)
+}
 case class Login(identifier: String, password: Option[String])
+
+abstract class UsersProvider {
+  def get(id: Int): Future[Option[User]]
+  def get(ident: String): Future[Option[User]]
+  def create(login: Login): Future[Int]
+  def isAdmin(id: Int): Future[Boolean]
+  def makeAdmin(userId: Int): Future[Int]
+}
 
 object UserTraits {
   sealed trait LoginError
@@ -24,10 +35,10 @@ object UserTraits {
   case object IdentExists extends CreationError // Only the one for now, but this way it's more extensible than just using an Option
 }
 
-object Users {
+class Users(duration: Duration = Duration.Inf)(implicit usersDb: UsersProvider) {
   import UserTraits._
-  def login(info: Login): Future[Either[LoginError, Profile]] = {
-    UsersDb.getUserByIdent(info.identifier).map({
+  def login(info: Login): Either[LoginError, Profile] = {
+    val result = usersDb.get(info.identifier).map({
       case None => Left(NonexistentIdent)
       case Some(userInfo) => userInfo.password match {
         case None => info.password match {
@@ -35,38 +46,37 @@ object Users {
             * an account with G+/Facebook authentication
             * as the ident would match and there would be no password check
             */
-          case None => Right(Profile (userInfo.id, userInfo.identifier, userInfo.friendsViewable, userInfo.public))
+          case None => Right(userInfo.profile)
           case Some(_) => Left(NotPasswordAccount)
         }
         case Some(password) => info.password.map(_.isBcrypted(password)) match {
           case None => Left(NeedPassword)
-          case Some(true) => Right(Profile(userInfo.id, userInfo.identifier, userInfo.friendsViewable, userInfo.public))
+          case Some(true) => Right(userInfo.profile)
           case _ => Left(WrongPassword)
         }
       }
     })
+    Await.result(result, duration)
   }
 
-  def create(info: Login): Future[Either[CreationError, Unit]] = {
-    UsersDb.getUserByIdent(info.identifier).map({
+  def create(info: Login): Either[CreationError, Unit] = {
+    val result = usersDb.get(info.identifier).map({
       case Some(_) => Left(IdentExists)
       case None => {
-        UsersDb.createUser(info.identifier, info.password)
-        Right(Unit)
+        usersDb.create(info)
+        Right(()) // Why does it have to be () here but Unit works fine down in the object?  So confused
       }
     })
+    Await.result(result, duration)
   }
 
-  def getId(identifier: String): Option[Int] = Await.result(UsersDb.getUserByIdent(identifier), 1.second).map(_.id)
+  def getId(identifier: String): Option[Int] = Await.result(usersDb.get(identifier), duration).map(_.id)
 
-  def isAdmin(userId: Int): Boolean = Await.result(UsersDb.getAdminData(userId).map({
+  def isAdmin(userId: Int): Boolean = Await.result(usersDb.isAdmin(userId), duration)
+  def isAdmin(identifier: String): Boolean = getId(identifier) match {
     case None => false
-    case Some(adm) => adm.isAdmin
-  }), Duration.Inf)
-  def isAdmin(identifier: String): Boolean = Await.result(UsersDb.getUserByIdent(identifier), Duration.Inf) match {
-    case None => false
-    case Some(profile) => isAdmin(profile.id)
+    case Some(userId) => Await.result(usersDb.isAdmin(userId), duration)
   }
 
-  def makeAdmin(userId: Int) = UsersDb.makeAdmin(userId)
+  def makeAdmin(userId: Int) = usersDb.makeAdmin(userId)
 }
