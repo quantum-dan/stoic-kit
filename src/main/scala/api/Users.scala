@@ -16,6 +16,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import stoickit.api.generic.Success._
+
 object LoginCookie {
   /* Security:
    * Store the identifier and IP address in plain text.
@@ -25,10 +27,14 @@ object LoginCookie {
    */
   def loginCookie(identifier: String) = HttpCookie("identifier", value = identifier, path=Some("/"))
   def readLoginCookie(cookiePair: HttpCookiePair): Option[String] = Some(cookiePair.value)
-  def withLoginCookie(f: String => server.Route) = cookie("identifier")(readLoginCookie(_) match {
+  def withLoginCookie(f: String => server.Route): server.Route = cookie("identifier")(readLoginCookie(_) match {
     case None => complete(StatusCodes.Unauthorized)
     case Some(str) => f(str)
   })
+  def withLoginCookieId(f: Int => server.Route): server.Route = withLoginCookie({ident: String => (new Users()).getId(ident) match {
+    case None => complete(Success(false, "Invalid identifier"))
+    case Some(id) => f(id)
+  }})
 }
 
 object Route {

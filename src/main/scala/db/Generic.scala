@@ -24,5 +24,7 @@ object Initialize {
     quotes.QuotesDb.init
     handbook.ChaptersDb.init
     handbook.EntriesDb.init
+    exercises.ExercisesDb.init
+    exercises.ExerciseLogDb.init
   }
 }

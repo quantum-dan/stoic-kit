@@ -8,78 +8,26 @@ import stoickit.db.users
 import slick.basic.DatabasePublisher
 import scala.collection.mutable.HashSet
 
+import stoickit.interface.exercises
+import exercises.Parameters._
+import exercises.Classifiers._
+import exercises.{ExercisesProvider, Exercise, ExerciseLogItem}
+
 import com.typesafe.config.ConfigFactory
 
-sealed trait ExerciseType
-case object Askesis extends ExerciseType
-case object Meditation extends ExerciseType
-case object General extends ExerciseType
-
-sealed trait VirtueType
-case object Wisdom extends VirtueType
-case object Justice extends VirtueType
-case object Fortitude extends VirtueType
-case object Temperance extends VirtueType
-
-sealed trait DisciplineType
-case object Desire extends DisciplineType
-case object Assent extends DisciplineType
-case object Action extends DisciplineType
+object Implicits {
+  implicit val exercisesDb = ExercisesDb
+}
 
 object ColumnTypes {
-  implicit val exerciseSetType = MappedColumnType.base[HashSet[ExerciseType], Int]({ ets =>
-      (if (ets contains Askesis) {4} else {0}) + (if (ets contains Meditation) {2} else {0}) + (if (ets contains General) {1} else {0})
-    }, { i =>
-    var set = new HashSet(): HashSet[ExerciseType]
-    if (i >= 4) {
-      set += Askesis
-    }
-    if (i % 4 >= 2) {
-      set += Meditation
-    }
-    if (i % 6 == 1) {
-      set += General
-    }
-    set
-  })
+  implicit val exerciseSetType = MappedColumnType.base[HashSet[ExerciseType], Int](toIntExercise, fromIntExercise)
 
-  implicit val virtueSetType = MappedColumnType.base[HashSet[VirtueType], Int]({vts =>
-    (if (vts contains Wisdom) {8} else {0}) + (if (vts contains Justice) {4} else {0}) + (if (vts contains Fortitude) {2} else {0}) + (if (vts contains Temperance) {1} else {0})
-  },
-    {i =>
-      var set = new HashSet(): HashSet[VirtueType]
-      if (i >= 8) set += Wisdom
-      if (i % 8 >= 4) set += Justice
-      if (i % 12 >= 2) set += Fortitude
-      if (i % 14 == 1) set += Temperance
-      set
-    }
-  )
+  implicit val virtueSetType = MappedColumnType.base[HashSet[VirtueType], Int](toIntVirtue, fromIntVirtue)
 
-  implicit val disciplineSetType = MappedColumnType.base[HashSet[DisciplineType], Int]({dts =>
-    (if (dts contains Desire) 4 else 0) + (if (dts contains Assent) 2 else 0) + (if (dts contains Action) 1 else 0)
-  },
-  { i =>
-    var set = new HashSet(): HashSet[DisciplineType]
-    if (i >= 4) set += Desire
-    if (i % 4 >= 2) set += Assent
-    if (i % 6 == 1) set += Action
-    set
-  }
-  )
+  implicit val disciplineSetType = MappedColumnType.base[HashSet[DisciplineType], Int](toIntDiscipline, fromIntDiscipline)
 }
 
 import ColumnTypes._
-
-case class Exercise(id: Int = 0,
-                    title: String, description: String,
-                    types: HashSet[ExerciseType],
-                    virtues: HashSet[VirtueType],
-                    disciplines: HashSet[DisciplineType],
-                    duration: Int = 1, // Days
-                    recommended: Boolean = false,
-                    ownerId: Int, completions: Int = 0, upvotes: Int = 0, downvotes: Int = 0)
-case class ExerciseLogItem(id: Int, userId: Int, exerciseId: Int, timestamp: String)
 
 class Exercises(tag: Tag) extends Table[Exercise](tag, "exercises") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -104,11 +52,11 @@ class ExerciseLog(tag: Tag) extends Table[ExerciseLogItem](tag, "exercises_log")
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def userId = column[Int]("user_id") // set up foreign key constraint
   def exerciseId = column[Int]("exercise_id")
-  def timestamp = column[String]("timestamp")
+  def timestamp = column[Int]("timestamp")
   def * = (id, userId, exerciseId, timestamp) <> (ExerciseLogItem.tupled, ExerciseLogItem.unapply)
 }
 
-object ExercisesDb {
+object ExercisesDb extends ExercisesProvider {
   val exercises = TableQuery[Exercises]
   import SqlDb._
   type QueryType = Query[Exercises, Exercise, Seq]
@@ -116,6 +64,12 @@ object ExercisesDb {
   def init = db.run(exercises.schema.create)
 
   def create(exercise: Exercise) = db.run(exercises += exercise)
+  def log(item: ExerciseLogItem) = ExerciseLogDb.log(item)
+
+  def get(id: Int): Future[Option[Exercise]] = db.run(exercises.filter(_.id === id).result.headOption)
+
+  def getTop(rank: Rank = NoRank, count: Int = nToLoad): Future[Seq[Exercise]] = db.run(exercises.take(count).result)
+  def getFiltered(filters: List[Filter] = List(), rank: Rank = NoRank, count: Int = nToLoad): Future[Seq[Exercise]] = getTop(count = count)
 
   val numberToLoad: Int = ConfigFactory.load().getInt("exercises.numberToLoad")
   // Write methods to get top numberToLoad exercises by various filters
@@ -133,7 +87,21 @@ object ExercisesDb {
   def loadRecommendations = db.run(topExercises(exercises.filter(_.recommended)).take(numberToLoad).result)
 
   def streamExercises(filtered: QueryType): DatabasePublisher[Exercise] = db.stream(filtered.result)
+  /** TODO */
+  def streamRecommendations[U](filters: List[Filter] = List(), rank: Rank = NoRank)(handler: Exercise => U): Unit = ()
 
+  // Note: String interpolation here is sanitized--no injection risk
+  def completion(id: Int): Future[Unit] = db.run(
+    sqlu""" UPDATE exercises SET completions = completions + 1
+          WHERE id=$id
+        """).map((_) => ())
+  def upvote(id: Int): Future[Unit] = db.run(
+    sqlu""" UPDATE exercises SET upvotes = upvotes + 1
+      WHERE id=$id""").map((_) => ())
+  def downvote(id: Int): Future[Unit] = db.run(
+    sqlu""" UPDATE exercises SET downvotes = downvotes + 1
+      WHERE id=$id"""
+  ).map((_) => ())
 }
 
 object ExerciseLogDb {
