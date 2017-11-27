@@ -75,7 +75,10 @@ object ExerciseUtils {
   def genFilter(filters: List[Filter])(exercise: Exercise): Boolean = {
       val filterList: List[Exercise => Boolean] = filters map {
         case Owner(id) => (e: Exercise) => e.ownerId == id
-        case Title(title, exact) => (e: Exercise) => e.title == title // Only exact, for now
+        case Title(title, exact) => {
+          if (exact) (e: Exercise) => e.title.toLowerCase() == title.toLowerCase()
+          else (e: Exercise) => e.title.toLowerCase() contains title.toLowerCase()
+        }
         case Types(types, exact) => { (e: Exercise) =>
           if (exact) types == e.types
           else e.types.exists(types.contains(_))

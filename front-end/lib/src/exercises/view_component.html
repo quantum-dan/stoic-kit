@@ -1,5 +1,24 @@
 <div>
     <h3>Recommended Exercises:</h3>
+    <div>
+        <h4>Set Filters</h4>
+        <div>Title: <material-input [(ngModel)]="filters.title.filter.strData"></material-input> Exact? {{filters.title.filter.exact ? "Yes" : "No"}}
+             <material-button (trigger)="filters.title.filter.exact=!filters.title.filter.exact">Toggle</material-button></div>
+        <div>Categories: <material-button *ngFor="let type of filters.typeItems" (trigger)="filters.typeItems.remove(type)">{{type}}</material-button>
+        <div>Add: <material-button *ngFor="let type of allTypes" (trigger)="filters.typeItems.add(type)">{{type}}</material-button></div>
+        </div>
+        <div>Virtues: <material-button *ngFor="let virtue of filters.virtueItems" (trigger)="filters.virtueItems.remove(virtue)">{{virtue}}</material-button>
+            <div>Add: <material-button *ngFor="let virtue of allVirtues" (trigger)="filters.virtueItems.add(virtue)">{{virtue}}</material-button></div>
+        </div>
+        <div>Disciplines: <material-button *ngFor="let discipline of filters.disciplineItems" (trigger)="filters.disciplineItems.remove(discipline)">{{discipline}}</material-button>
+            <div>Add: <material-button *ngFor="let discipline of allDisciplines" (trigger)="filters.disciplineItems.add(discipline)">{{discipline}}</material-button></div>
+        </div>
+        <div>Completions: <input type="text" id="min-comp" placeholder="Minimum" />
+            <input type="text" id="max-comp" placeholder="Maximum" /></div>
+        <div>Upvotes: <input id="upvotes" placeholder="Minimum" type="text" />
+            Minimum Ratio (upvotes:total votes): <input type="text" id="ratio" /></div>
+        <material-button (trigger)="loadFiltered()" raised>Apply Filters</material-button>
+    </div>
     <p *ngIf="exercises.isEmpty">No recommended exercises.</p>
     <div *ngIf="exercises.isNotEmpty">
         <div *ngFor="let exercise of exercises">
