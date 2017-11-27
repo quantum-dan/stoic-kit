@@ -3,6 +3,8 @@ package stoickit.api.users
 import stoickit.interface.users._
 import stoickit.db.users.Implicits._
 
+import stoickit.api.generic.Success._
+
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server
@@ -32,7 +34,7 @@ object LoginCookie {
     case Some(str) => f(str)
   })
   def withLoginCookieId(f: Int => server.Route): server.Route = withLoginCookie({ident: String => (new Users()).getId(ident) match {
-    case None => complete(Success(false, "Invalid identifier"))
+    case None => complete(StatusCodes.Unauthorized)
     case Some(id) => f(id)
   }})
 }
@@ -42,8 +44,6 @@ object Route {
 
   implicit val loginFormat = jsonFormat2(Login)
   implicit val profileFormat = jsonFormat4(Profile)
-  case class Success(success: Boolean, result: String = "")
-  implicit val successFormat = jsonFormat2(Success)
 
   def usersHandler() = new Users()
 

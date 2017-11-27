@@ -96,6 +96,8 @@ abstract class ExercisesProvider {
 
   def getFiltered(filters: List[Filter] = List(), rank: Rank = NoRank, count: Int = nToLoad): Future[Seq[Exercise]]
 
+  def getLogEntries(userId: Int): Future[Seq[ExerciseLogItem]]
+
   def completion(id: Int): Future[Unit]
   def upvote(id: Int): Future[Unit]
   def downvote(id: Int): Future[Unit]
@@ -117,6 +119,7 @@ object Parameters {
   sealed trait Rank
   case object NoRank extends Rank
   case class SubscribedUsers(userIds: HashSet[Int]) extends Rank
+  case object StandardRank extends Rank
 }
 
 class Exercises(duration: Duration = Duration.Inf)(implicit exercisesDb: ExercisesProvider) {
@@ -124,10 +127,18 @@ class Exercises(duration: Duration = Duration.Inf)(implicit exercisesDb: Exercis
   def currentTime(): Int = 0
 
   def create(exercise: Exercise): Future[Int] = exercisesDb.create(exercise)
-  def log(logItem: ExerciseLogItem): Future[Int] = exercisesDb.log(logItem.copy(timestamp = currentTime()))
+  def log(logItem: ExerciseLogItem): Future[Int] = {
+    exercisesDb.completion(logItem.exerciseId)
+    exercisesDb.log(logItem.copy(timestamp = currentTime()))
+  }
   def createAndLog(exercise: Exercise): Future[Int] = exercisesDb.create(exercise.copy(completions = 1)).flatMap({id =>
     exercisesDb.log(ExerciseLogItem(0, exercise.ownerId, id, currentTime()))
   })
+
+  def getLog(userId: Int): Seq[Exercise] = Await.result(exercisesDb.getLogEntries(userId), duration).map({logItem =>
+    Await.result(exercisesDb.get(logItem.exerciseId), duration)}).filter(i => !i.isEmpty).map(_.get)
+
+  def getFiltered(filters: List[Filter], rank: Rank): Seq[Exercise] = Await.result(exercisesDb.getFiltered(filters, rank), duration)
 
   def loadRecommendations() = Await.result(exercisesDb.getTop(), duration).filter(_.recommended)
 }

@@ -1,0 +1,18 @@
+<div>
+    <h3>Recommended Exercises:</h3>
+    <p *ngIf="exercises.isEmpty">No recommended exercises.</p>
+    <div *ngIf="exercises.isNotEmpty">
+        <div *ngFor="let exercise of exercises">
+            <h4>{{exercise.title}}</h4>
+            <p>Categories: <span *ngFor="let type of exercise.types">{{type}} </span></p>
+            <p>Virtues: <span *ngFor="let virtue of exercise.virtues">{{virtue}} </span></p>
+            <p>Disciplines: <span *ngFor="let discipline of exercise.disciplines">{{discipline}} </span></p>
+            <p>Duration: {{exercise.duration}} days. Completions: {{exercise.completions}}.
+                Upvotes: {{exercise.upvotes}}. Downvotes: {{exercise.downvotes}}.</p>
+            <p>{{exercise.description}}</p>
+            <p *ngIf="loggedIn"><material-button raised (trigger)="log(exercise.id)">
+                Log Completion
+            </material-button></p>
+        </div>
+    </div>
+</div>

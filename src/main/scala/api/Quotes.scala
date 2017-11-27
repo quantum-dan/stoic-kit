@@ -2,6 +2,7 @@ package stoickit.api.quotes
 
 import stoickit.interface.quotes
 import stoickit.db.quotes.Implicits._
+import stoickit.api.generic.Success._
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.Http
@@ -16,8 +17,6 @@ import akka.util.ByteString
 
 object Route {
   implicit val quoteFormat = jsonFormat3(quotes.Quote)
-  case class Success(success: Boolean)
-  implicit val successFormat = jsonFormat1(Success)
 
   def quotesHandler() = new quotes.Quotes()
 

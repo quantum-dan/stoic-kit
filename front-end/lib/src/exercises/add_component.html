@@ -1,0 +1,17 @@
+<form>
+    <h4>Create a new exercise:</h4>
+    <p><material-input label="Title" [(ngModel)]="formData.title"></material-input></p>
+    <input id="duration" type="number" step="1" placeholder="Duration (days)" />
+    <span>Recommend publicly? <input id="recommend" type="checkbox" /></span>
+    <div>Categories: <material-button *ngFor="let type of formData.types" (trigger)="formData.types.remove(type)">{{type}}</material-button>
+        <div>Add: <material-button *ngFor="let type of typeList" (trigger)="formData.types.add(type)">{{type}}</material-button></div>
+    </div>
+    <div>Virtues: <material-button *ngFor="let virtue of formData.virtues" (trigger)="formData.virtues.remove(virtue)">{{virtue}}</material-button>
+        <div>Add: <material-button *ngFor="let virtue of virtueList" (trigger)="formData.virtues.add(virtue)">{{virtue}}</material-button></div>
+    </div>
+    <div>Disciplines: <material-button *ngFor="let discipline of formData.disciplines" (trigger)="formData.disciplines.remove(discipline)">{{discipline}}</material-button>
+        <div>Add: <material-button *ngFor="let discipline of disciplineList" (trigger)="formData.disciplines.add(discipline)">{{discipline}}</material-button></div>
+    </div>
+    <material-input label="Description" multiline rows="5" style="width: 80%" [(ngModel)]="formData.description"></material-input>
+    <div>Also log completion? <input id="log" type="checkbox" /><material-button raised (trigger)="send()" [disabled]="incomplete()">Submit</material-button></div>
+</form>

@@ -5,7 +5,7 @@ import spray.json._
 
 object Success {
 
-  case class Success(success: Boolean = true, reason: String = "")
+  case class Success(success: Boolean = true, result: String = "")
   implicit val successFormat = jsonFormat2(Success)
 
 }

@@ -2,10 +2,10 @@ package stoickit.api.handbook
 
 import stoickit.interface.handbook._
 import stoickit.db.handbook.Implicits._
-import stoickit.interface.users.Users
-import stoickit.db.users.Implicits._
 
-import stoickit.api.users.LoginCookie.withLoginCookie
+import stoickit.api.generic.Success._
+
+import stoickit.api.users.LoginCookie.withLoginCookieId
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.Http
@@ -25,19 +25,11 @@ object Route {
   def entries(): Entries = new Entries()
   def chapters(): Chapters = new Chapters()
 
-  case class Success(success: Boolean = true, result: String = "")
-
   implicit val chapterFormat = jsonFormat4(Chapter)
   implicit val entryFormat = jsonFormat4(Entry)
   implicit val fullChapterFormat = jsonFormat2(FullChapter)
-  implicit val successFormat = jsonFormat2(Success)
 
-  def routeWrapper(f: Int => server.Route): server.Route = withLoginCookie(new Users().getId(_) match {
-    case None => complete(StatusCodes.Unauthorized)
-    case Some(userId) => f(userId)
-  })
-
-  val route = routeWrapper { userId: Int =>
+  val route = withLoginCookieId { userId: Int =>
     path("") {
       get {
         complete(entries.getByUser(userId).takeRight(nToTake))

@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.directives._
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 import ContentTypeResolver.Default
+import stoickit.api._
 
 import com.typesafe.config.ConfigFactory
 
@@ -25,9 +26,10 @@ object StoicKit {
     val route =
       path("")(getFromFile(index)) ~
       pathPrefix("html")(getFromDirectory("front-end/build/web")) ~
-      pathPrefix("quote")(stoickit.api.quotes.Route.route) ~
-      pathPrefix("user")(stoickit.api.users.Route.route) ~
-      pathPrefix("handbook")(stoickit.api.handbook.Route.route)
+      pathPrefix("quote")(quotes.Route.route) ~
+      pathPrefix("user")(users.Route.route) ~
+      pathPrefix("handbook")(handbook.Route.route) ~
+      pathPrefix("exercises")(exercises.Route.route)
     val binding = Http().bindAndHandle(route, host, port)
     println("RETURN to stop server")
     StdIn.readLine()
