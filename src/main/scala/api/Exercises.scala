@@ -20,16 +20,16 @@ import server.directives.ParameterDirectives.ParamMagnet
 import stoickit.api.generic.Success._
 
 object Route {
-  def exercises() = new Exercises()
+  def exercises() = new Exercises()(new stoickit.db.exercises.quill.ExercisesDb())
 
   implicit object ExerciseFormat extends RootJsonFormat[Exercise] {
     def write(e: Exercise) = JsObject(
       "id" -> JsNumber(e.id),
       "title" -> JsString(e.title),
       "description" -> JsString(e.description),
-      "types" -> JsNumber(toIntExercise(e.types)),
-      "virtues" -> JsNumber(toIntVirtue(e.virtues)),
-      "disciplines" -> JsNumber(toIntDiscipline(e.disciplines)),
+      "types" -> JsNumber(e.types),
+      "virtues" -> JsNumber(e.virtues),
+      "disciplines" -> JsNumber(e.disciplines),
       "duration" -> JsNumber(e.duration),
       "recommended" -> JsBoolean(e.recommended),
       "ownerId" -> JsNumber(e.ownerId),
@@ -42,8 +42,8 @@ object Route {
                                                             "duration", "recommended") match {
       case Seq(JsString(title), JsString(description), JsNumber(types), JsNumber(virtues),
                 JsNumber(disciplines), JsNumber(duration), JsBoolean(recommended)) =>
-        Exercise(0, title, description, fromIntExercise(types.toInt), fromIntVirtue(virtues.toInt),
-          fromIntDiscipline(disciplines.toInt), duration.toInt, recommended, 0, 0, 0, 0)
+        Exercise(0, title, description, types.toInt, virtues.toInt,
+          disciplines.toInt, duration.toInt, recommended, 0, 0, 0, 0)
       case _ => throw new DeserializationException("Exercise expected")
     }
   }
@@ -90,9 +90,9 @@ object Route {
     val filters: List[Filter] = List(
       extract("owner", str => Owner(str.toInt)),
       extractWithExact("title", "title-exact", Title(_, _)),
-      extractWithExact("types", "types-exact", (str, exact) => Types(fromIntExercise(str.toInt), exact)),
-      extractWithExact("virtues", "virtues-exact", (str, exact) => Virtues(fromIntVirtue(str.toInt), exact)),
-      extractWithExact("disciplines", "disciplines-exact", (str, exact) => Disciplines(fromIntDiscipline(str.toInt), exact)),
+      extractWithExact("types", "types-exact", (str, exact) => Types(str.toInt, exact)),
+      extractWithExact("virtues", "virtues-exact", (str, exact) => Virtues(str.toInt, exact)),
+      extractWithExact("disciplines", "disciplines-exact", (str, exact) => Disciplines(str.toInt, exact)),
       extract("min-completions", str => MinCompletions(str.toInt)),
       extract("max-completions", str => MaxCompletions(str.toInt)),
       extract("upvotes", str => MinUpvotes(str.toInt)),

@@ -75,9 +75,9 @@ object Classifiers {
 
 case class Exercise(id: Int,
                     title: String, description: String,
-                    types: HashSet[ExerciseType],
-                    virtues: HashSet[VirtueType],
-                    disciplines: HashSet[DisciplineType],
+                    types: Int,
+                    virtues: Int,
+                    disciplines: Int,
                     duration: Int = 1, // Days
                     recommended: Boolean = false,
                     ownerId: Int, completions: Int = 0, upvotes: Int = 0, downvotes: Int = 0)
@@ -85,7 +85,6 @@ case class ExerciseLogItem(id: Int, userId: Int, exerciseId: Int, timestamp: Int
 
 abstract class ExercisesProvider {
   val nToLoad: Int = com.typesafe.config.ConfigFactory.load().getInt("exercises.numberToLoad")
-  def streamRecommendations[U](filters: List[Filter] = List(), rank: Rank = NoRank)(handler: Exercise => U): Unit
 
   def create(exercise: Exercise): Future[Int]
   def log(item: ExerciseLogItem): Future[Int]
@@ -108,9 +107,9 @@ object Parameters {
   sealed trait Filter
   case class Owner(ownerId: Int) extends Filter
   case class Title(title: String, exact: Boolean = false) extends Filter
-  case class Types(types: HashSet[ExerciseType], exact: Boolean = false) extends Filter
-  case class Virtues(virtues: HashSet[VirtueType], exact: Boolean = false) extends Filter
-  case class Disciplines(disciplines: HashSet[DisciplineType], exact: Boolean = false) extends Filter
+  case class Types(types: Int, exact: Boolean = false) extends Filter
+  case class Virtues(virtues: Int, exact: Boolean = false) extends Filter
+  case class Disciplines(disciplines: Int, exact: Boolean = false) extends Filter
   case class MinCompletions(min: Int) extends Filter
   case class MaxCompletions(max: Int) extends Filter
   case class MinUpvotes(min: Int) extends Filter

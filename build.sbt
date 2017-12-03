@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
 	"com.typesafe.slick" %% "slick-hikaricp" % "3.2.1", // For Slick
   "mysql" % "mysql-connector-java" % "5.1.+",
 	"org.xerial" % "sqlite-jdbc" % "3.7.2",
-	"com.github.t3hnar" %% "scala-bcrypt" % "3.0"
+	"com.github.t3hnar" %% "scala-bcrypt" % "3.0",
+	"io.getquill" %% "quill-async-mysql" % "2.3.0"
 )
 
 mainClass in Compile := Some("stoickit.StoicKit")

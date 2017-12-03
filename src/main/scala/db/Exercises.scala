@@ -19,23 +19,13 @@ object Implicits {
   implicit val exercisesDb = ExercisesDb
 }
 
-object ColumnTypes {
-  implicit val exerciseSetType = MappedColumnType.base[HashSet[ExerciseType], Int](toIntExercise, fromIntExercise)
-
-  implicit val virtueSetType = MappedColumnType.base[HashSet[VirtueType], Int](toIntVirtue, fromIntVirtue)
-
-  implicit val disciplineSetType = MappedColumnType.base[HashSet[DisciplineType], Int](toIntDiscipline, fromIntDiscipline)
-}
-
-import ColumnTypes._
-
 class Exercises(tag: Tag) extends Table[Exercise](tag, "exercises") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def title = column[String]("title")
   def description = column[String]("description")
-  def types = column[HashSet[ExerciseType]]("types")
-  def virtues = column[HashSet[VirtueType]]("virtues")
-  def disciplines = column[HashSet[DisciplineType]]("disciplines")
+  def types = column[Int]("types")
+  def virtues = column[Int]("virtues")
+  def disciplines = column[Int]("disciplines")
   def duration = column[Int]("duration")
   def recommended = column[Boolean]("recommended")
   def ownerId = column[Int]("owner_id") // Note: no foreign key restriction, so that exercises created will remain
@@ -81,15 +71,15 @@ object ExerciseUtils {
         }
         case Types(types, exact) => { (e: Exercise) =>
           if (exact) types == e.types
-          else e.types.exists(types.contains(_))
+          else (e.types & types) > 0
         }
         case Virtues(virtues, exact) => { (e: Exercise) =>
           if (exact) virtues == e.virtues
-          else e.virtues.exists(virtues.contains(_))
+          else (e.virtues & virtues) > 0
         }
         case Disciplines(disc, exact) => { (e: Exercise) =>
           if (exact) disc == e.disciplines
-          else e.disciplines.exists(disc.contains(_))
+          else (e.disciplines & disc) > 0
         }
         case MinCompletions(min) => (e: Exercise) => e.completions >= min
         case MaxCompletions(max) => (e: Exercise) => e.completions <= max
