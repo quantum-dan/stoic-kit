@@ -4,14 +4,12 @@ Website and app developed to help Stoics with their practice.
 # Features
 ## Currently implemented
 * Quotes
-* Meditations log + handbook generator
+* Meditations log + handbook HTML generator
+* Exercises (askesis, meditation, etc) suggestions contributed by users
+* Exercises log
 
 ## To be implemented
-* Askesis suggestions (created by users, maybe)
-* Askesis log
 * Reminders to write down daily meditations (with topic suggestions?)
-* Exercises suggestions (maybe from users)
-* Exercises log
 * Resources page with links to free versions of Stoic texts
 
 # Implementation
@@ -20,7 +18,7 @@ Website and app developed to help Stoics with their practice.
 * App connecting to server
 
 ## HTTP Server
-Implemented with Scala using akka-http for HTTP and Slick for SQL data.  DynamoDB approach to be determined, but
+Implemented with Scala using akka-http for HTTP and Slick for SQL data (exercises done with Quill instead).  DynamoDB approach (for texts, if stored on the server instead of just links) to be determined, but
 DynamoDB supports JDBC so that should be doable.
 
 Notes:
@@ -31,7 +29,7 @@ notably, Go and Java.
 
 ## Website
 Implemented with AngularDart--that is, Angular framework, Dart language.
-Note on streaming information: grab part of the stream, parse, transfer to a list as necessary.
+Note on streaming information: grab part of the stream, parse, transfer to a list as necessary (there's not really any reason to stream, it turns out, and Dart doesn't seem to provide a good way to read HTTP streams anyway).
 
 ## App
 There is the obvious option of native design, with Java/Kotlin, Swift and C#.  Better performance and a more native look,
